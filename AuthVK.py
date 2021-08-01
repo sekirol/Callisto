@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 
-from PyQt5.QtWidgets import QApplication, QCheckBox, QDialog, QDialogButtonBox, QLabel, QMainWindow, QMessageBox, QStatusBar, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QCheckBox, QComboBox, QDateEdit, QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QSpinBox, QStatusBar, QVBoxLayout, QWidget
 from PyQt5.QtWidgets import QFormLayout
 from PyQt5.QtWidgets import QLineEdit
 
@@ -134,6 +134,63 @@ class AuthVkDialog(QDialog):
         else:
             self.pwdField.setEchoMode(QLineEdit.EchoMode.Password)
 
+class SearchVkForm(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        
+        self.setFixedWidth(200)
+
+        self.searchQueryField = QLineEdit()
+        self.sexComoBox = QComboBox()
+        self.birthDateField = QDateEdit()
+        self.ageFromField = QSpinBox()
+        self.ageToField = QSpinBox()
+        self.countryComoBox = QComboBox()
+        self.cityComoBox = QComboBox()      
+
+        self.searchFormLayout = QVBoxLayout()
+        
+        self.createSearchFields()
+
+        self.setLayout(self.searchFormLayout)
+    
+        self._fillingCountryComboBox()
+        # Fills only after country selecting
+        self._fillingCityComboBox()
+
+    def createSearchFields(self):
+        # Search query section
+        self.searchFormLayout.addWidget(QLabel("Search query:"))
+        self.searchFormLayout.addWidget(self.searchQueryField)
+        # Selection sex section
+        self.sexComoBox.addItems(["Any", "Man", "Woman"])
+        self.searchFormLayout.addWidget(QLabel("Sex:"))
+        self.searchFormLayout.addWidget(self.sexComoBox)
+        # Birth date section
+        self.searchFormLayout.addWidget(QLabel("Birth date:"))
+        self.searchFormLayout.addWidget(self.birthDateField) 
+        # Age limits section
+        ageFromToLayout = QHBoxLayout()
+        ageFromToLayout.addWidget(QLabel("Age from:"))
+        ageFromToLayout.addWidget(self.ageFromField)
+        ageFromToLayout.addWidget(QLabel("Age to:"))
+        ageFromToLayout.addWidget(self.ageToField)
+        self.searchFormLayout.addLayout(ageFromToLayout)
+        # Slection country section
+        self.searchFormLayout.addWidget(QLabel("Country:"))
+        self.searchFormLayout.addWidget(self.countryComoBox)
+        # Slection city section
+        self.searchFormLayout.addWidget(QLabel("City:"))
+        self.searchFormLayout.addWidget(self.cityComoBox)
+
+        self.searchFormLayout.addStretch()
+
+    def _fillingCountryComboBox(self):
+        self.countryComoBox.addItems(["Russia", "Ukraine", "Belarus"])
+
+    def _fillingCityComboBox(self):
+        self.cityComoBox.addItems(["Saint-Petersburg", "Moscow"])
+
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -141,10 +198,12 @@ class MainWindow(QMainWindow):
         self.authVkDialog = AuthVkDialog(self)
 
         self.setWindowTitle('Calisto')
-        self.setFixedSize(500, 500)
 
-        self.mainLabel = QLabel("Main widget")
-        self.setCentralWidget(self.mainLabel)
+        mainLayout = QHBoxLayout()
+        mainLayout.addWidget(SearchVkForm(self))
+        self.mainWidget = QWidget()
+        self.mainWidget.setLayout(mainLayout)
+        self.setCentralWidget(self.mainWidget)
 
         self._createMenu()
         self._createStatusBar()
