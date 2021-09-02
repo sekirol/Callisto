@@ -25,10 +25,6 @@ class VkApiInteraction():
         except vk_api.exceptions.Captcha as connectException:
             print(connectException)
 
-        if self.connection:
-            self.api = self.session.get_api()
-            self.profileInfo = self.api.account.getProfileInfo()
-
     # Function returns first key from VK_ACCESS_FILE if it exist
     def _getUserLogin(self, filename):
 
@@ -45,6 +41,7 @@ class VkApiInteraction():
     def logOut(self):
         # End session
         self.session = None
+        self.connection = False
 
         # Remove access data file
         try:
@@ -55,6 +52,9 @@ class VkApiInteraction():
     def getConnection(self):
         self.session.auth()
         self.connection = True
+
+        self.api = self.session.get_api()
+        self.profileInfo = self.api.account.getProfileInfo()
     
     def setAuthData(self, login=None, password=None):
         self.login = login
@@ -139,6 +139,7 @@ class AuthVkDialog(QDialog):
 
         try:
             self.mainWindow.vkSession.getConnection()
+            self.mainWindow.updateStatusBar()
             self.close()
         except vk_api.exceptions.AuthError as connectException:
             self.showAuthVkWarning(connectException.args[-1])
@@ -263,6 +264,9 @@ class MainWindow(QMainWindow):
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
 
+        self.updateStatusBar()
+
+    def updateStatusBar(self):
         if self.vkSession.connectionStatus():
             welcomeString = "Hello, {} {}".format(self.vkSession.profileInfo['first_name'], self.vkSession.profileInfo['last_name'])
         else:
@@ -272,6 +276,7 @@ class MainWindow(QMainWindow):
 
     def logOutVk(self):
         self.vkSession.logOut()
+        self.updateStatusBar()
 
         alertMsgBox = QMessageBox()
         alertMsgBox.setWindowTitle("VK Session")
