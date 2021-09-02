@@ -9,20 +9,61 @@ from PyQt5.QtWidgets import QLineEdit
 
 import vk_api, json, os
 
-class VkApiInteraction(vk_api.VkApi):
-    def prapareApi(self):
-        self.api = self.get_api()
-        self.profileInfo = self.api.account.getProfileInfo()
+class VkApiInteraction():
+    def __init__(self):
+
+        self.login = None
+        self.password = None
+        self.connection = False
+
+        self.setAuthData(login=self._getUserLogin(filename=VK_ACCESS_DATA_FILE))
+        
+        try:
+            self.getConnection()
+        except vk_api.exceptions.AuthError as connectException:
+            print(connectException)
+        except vk_api.exceptions.Captcha as connectException:
+            print(connectException)
+
+        if self.connection:
+            self.api = self.session.get_api()
+            self.profileInfo = self.api.account.getProfileInfo()
+
+    # Function returns first key from VK_ACCESS_FILE if it exist
+    def _getUserLogin(self, filename):
+
+        try:
+            with open(filename, 'r') as f:
+                jsondata = json.load(f)
+        except (IOError, ValueError):
+            return None
+
+        keysList = list(jsondata.keys())
+
+        return keysList[0]
 
     def logOut(self):
         # End session
-        vkSession = None
+        self.session = None
 
         # Remove access data file
         try:
             os.remove(VK_ACCESS_DATA_FILE)
         except:
             pass
+
+    def getConnection(self):
+        self.session.auth()
+        self.connection = True
+    
+    def setAuthData(self, login=None, password=None):
+        self.login = login
+        self.password = password
+
+        self.session = vk_api.VkApi(login=login, password=password, config_filename=VK_ACCESS_DATA_FILE)
+
+    def connectionStatus(self):
+        return self.connection
         
 class CaptchaDialog(QDialog):
     def __init__(self, parent):
@@ -59,6 +100,8 @@ class AuthVkDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.mainWindow = parent
+
         # Making captha window for Vk authentication window
         self.captchaVkDialog = CaptchaDialog(self)
         self.captchaVkDialog.formBtns.accepted.connect(self.capthaAceccept)
@@ -90,17 +133,17 @@ class AuthVkDialog(QDialog):
         dlgLayout.addWidget(formBtns)
         self.setLayout(dlgLayout)
 
-    def enterAuthData(self):     
-        # Make new session
-        vkSession = VkApiInteraction(login=self.loginField.text(), password=self.pwdField.text(), config_filename=VK_ACCESS_DATA_FILE)
+    def enterAuthData(self):       
+
+        self.mainWindow.vkSession.setAuthData(login=self.loginField.text(), password=self.pwdField.text())
 
         try:
-            vkSession.auth(reauth=False)
+            self.mainWindow.vkSession.getConnection()
             self.close()
-        except vk_api.exceptions.AuthError as exception:
-            self.showAuthVkWarning(exception.args[-1])
-        except vk_api.exceptions.Captcha as exception:
-            self.captchaVkDialog.exception = exception
+        except vk_api.exceptions.AuthError as connectException:
+            self.showAuthVkWarning(connectException.args[-1])
+        except vk_api.exceptions.Captcha as connectException:
+            self.captchaVkDialog.exception = connectException
             self.captchaVkDialog.setCaptchaImage()
             self.captchaVkDialog.open()
 
@@ -195,6 +238,8 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        self.vkSession = VkApiInteraction()
+        
         self.authVkDialog = AuthVkDialog(self)
 
         self.setWindowTitle('Calisto')
@@ -218,48 +263,25 @@ class MainWindow(QMainWindow):
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
 
-        if vkSession.profileInfo:
-            welcomeString = "Hello, {} {}".format(vkSession.profileInfo['first_name'], vkSession.profileInfo['last_name'])
+        if self.vkSession.connectionStatus():
+            welcomeString = "Hello, {} {}".format(self.vkSession.profileInfo['first_name'], self.vkSession.profileInfo['last_name'])
         else:
             welcomeString = "You are not authorized"
 
         self.statusBar.showMessage(welcomeString)
 
     def logOutVk(self):
-        vkSession.logOut()
+        self.vkSession.logOut()
 
         alertMsgBox = QMessageBox()
         alertMsgBox.setWindowTitle("VK Session")
         alertMsgBox.setText("Now, you are not authorized.")
         alertMsgBox.exec()
 
-# Function returns first key from VK_ACCESS_FILE if it exist
-def getUserLogin(filename):
-    try:
-        with open(filename, 'r') as f:
-            jsondata = json.load(f)
-    except (IOError, ValueError):
-        return None
-
-    keysList = list(jsondata.keys())
-
-    return keysList[0]
-
 if __name__ == '__main__':
 
     VK_ACCESS_DATA_FILE = 'accessData.json'
 
-    vkLogin = getUserLogin(VK_ACCESS_DATA_FILE)
-        
-    vkSession = VkApiInteraction(login=vkLogin, config_filename=VK_ACCESS_DATA_FILE)
-    vkSession.profileInfo = {}
-
-    try:
-        vkSession.auth()
-        vkSession.prapareApi()
-    except (vk_api.exceptions.AuthError, vk_api.exceptions.Captcha) as exception:
-        print(exception)
-    
     app = QApplication(sys.argv)
 
     mainWin = MainWindow()
