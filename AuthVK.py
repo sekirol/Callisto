@@ -64,7 +64,17 @@ class VkApiInteraction():
 
     def connectionStatus(self):
         return self.connection
-        
+
+    # Returns dictionary with countries {country : id}
+    def getCountriesList(self):
+        apiAnsver = self.api.database.getCountries()['items']
+        return {item['title'] : item['id'] for item in apiAnsver}
+
+    # Returns dictionary with cities by country id {city : id}
+    def getCitiesList(self, countryId):
+        apiAnsver = self.api.database.getCities(country_id=countryId)['items']
+        return {item['title'] : item['id'] for item in apiAnsver}
+
 class CaptchaDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
@@ -182,6 +192,8 @@ class SearchVkForm(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         
+        self.mainWindow = parent
+        
         self.setFixedWidth(200)
 
         self.searchQueryField = QLineEdit()
@@ -190,7 +202,7 @@ class SearchVkForm(QWidget):
         self.ageFromField = QSpinBox()
         self.ageToField = QSpinBox()
         self.countryComoBox = QComboBox()
-        self.cityComoBox = QComboBox()      
+        self.citiesComoBox = QComboBox()      
 
         self.searchFormLayout = QVBoxLayout()
         
@@ -198,9 +210,11 @@ class SearchVkForm(QWidget):
 
         self.setLayout(self.searchFormLayout)
     
+        # Empty items in combo box
+        self.countryComoBox.addItems([''])
+        self.citiesComoBox.addItems([''])
+    
         self._fillingCountryComboBox()
-        # Fills only after country selecting
-        self._fillingCityComboBox()
 
     def createSearchFields(self):
         # Search query section
@@ -225,15 +239,26 @@ class SearchVkForm(QWidget):
         self.searchFormLayout.addWidget(self.countryComoBox)
         # Slection city section
         self.searchFormLayout.addWidget(QLabel("City:"))
-        self.searchFormLayout.addWidget(self.cityComoBox)
+        self.searchFormLayout.addWidget(self.citiesComoBox)
 
         self.searchFormLayout.addStretch()
 
     def _fillingCountryComboBox(self):
-        self.countryComoBox.addItems(["Russia", "Ukraine", "Belarus"])
+        if self.mainWindow.vkSession.connectionStatus():
+            self.countriesList = self.mainWindow.vkSession.getCountriesList()
+            self.countryComoBox.addItems(self.countriesList.keys())
+            
+            self.countryComoBox.currentTextChanged.connect(self._fillingCityComboBox)
 
     def _fillingCityComboBox(self):
-        self.cityComoBox.addItems(["Saint-Petersburg", "Moscow"])
+        countryName = self.countryComoBox.currentText()
+        self.citiesComoBox.clear()          # Clear cities combo box
+        self.citiesComoBox.addItems([''])   # Add empty item
+
+        if countryName:
+            countryId = self.countriesList[countryName]
+            self.citiesList = self.mainWindow.vkSession.getCitiesList(countryId)
+            self.citiesComoBox.addItems(self.citiesList.keys())
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
