@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 
-from PyQt5.QtWidgets import QApplication, QCheckBox, QComboBox, QDateEdit, QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QSpinBox, QStatusBar, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QCheckBox, QComboBox, QDateEdit, QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QScrollArea, QSpinBox, QStatusBar, QVBoxLayout, QWidget
 from PyQt5.QtWidgets import QFormLayout
 from PyQt5.QtWidgets import QLineEdit
 
@@ -260,6 +260,16 @@ class SearchVkForm(QWidget):
             self.citiesList = self.mainWindow.vkSession.getCitiesList(countryId)
             self.citiesComoBox.addItems(self.citiesList.keys())
 
+class ResultsList(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.resultsLayout = QVBoxLayout()
+        for item in range(0, 30):
+            self.resultsLayout.addWidget(QLabel("Search result item " + str(item)))
+
+        self.setLayout(self.resultsLayout)
+
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -272,6 +282,12 @@ class MainWindow(QMainWindow):
 
         mainLayout = QHBoxLayout()
         mainLayout.addWidget(SearchVkForm(self))
+
+        # Search results section
+        resultsScrollArea = QScrollArea()
+        resultsScrollArea.setWidget(ResultsList(self))
+        mainLayout.addWidget(resultsScrollArea)
+        
         self.mainWidget = QWidget()
         self.mainWidget.setLayout(mainLayout)
         self.setCentralWidget(self.mainWidget)
