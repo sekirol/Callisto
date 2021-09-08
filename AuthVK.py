@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 
-from PyQt5.QtWidgets import QApplication, QCheckBox, QComboBox, QDateEdit, QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QScrollArea, QSpinBox, QStatusBar, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QCheckBox, QComboBox, QDateEdit, QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QScrollArea, QSpinBox, QStatusBar, QVBoxLayout, QWidget
 from PyQt5.QtWidgets import QFormLayout
 from PyQt5.QtWidgets import QLineEdit
 
@@ -240,7 +240,11 @@ class SearchVkForm(QWidget):
         # Slection city section
         self.searchFormLayout.addWidget(QLabel("City:"))
         self.searchFormLayout.addWidget(self.citiesComoBox)
-
+        # Search button section
+        searchButton = QPushButton('Search')
+        searchButton.pressed.connect(self.getSearchResults)
+        self.searchFormLayout.addWidget(searchButton)
+        
         self.searchFormLayout.addStretch()
 
     def _fillingCountryComboBox(self):
@@ -259,6 +263,15 @@ class SearchVkForm(QWidget):
             countryId = self.countriesList[countryName]
             self.citiesList = self.mainWindow.vkSession.getCitiesList(countryId)
             self.citiesComoBox.addItems(self.citiesList.keys())
+
+    def getSearchResults(self):
+        print(self.searchQueryField.text())
+        print(self.sexComoBox.currentText())
+        print(self.birthDateField.date())
+        print(self.ageFromField.value())
+        print(self.ageToField.value())
+        print(self.countryComoBox.currentText())
+        print(self.citiesComoBox.currentText())
 
 class ResultsList(QWidget):
     def __init__(self, parent):
