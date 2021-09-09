@@ -75,6 +75,13 @@ class VkApiInteraction():
         apiAnsver = self.api.database.getCities(country_id=countryId)['items']
         return {item['title'] : item['id'] for item in apiAnsver}
 
+    def getUsers(self, query):
+        if self.connection:
+            return self.api.users.search(q=query, count=1000)['items']
+        
+        # If user is not authorized
+        return {}
+
 class CaptchaDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
@@ -273,15 +280,34 @@ class SearchVkForm(QWidget):
         print(self.countryComoBox.currentText())
         print(self.citiesComoBox.currentText())
 
+        usersList = self.mainWindow.vkSession.getUsers(query=self.searchQueryField.text())
+        LFnames = [item['first_name']+' '+item['last_name'] for item in usersList]
+        self.mainWindow.vkSearchResults.addItems(LFnames)
+
 class ResultsList(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.searchResultsWidgets = []
+
         self.resultsLayout = QVBoxLayout()
-        for item in range(0, 30):
-            self.resultsLayout.addWidget(QLabel("Search result item " + str(item)))
 
         self.setLayout(self.resultsLayout)
+
+    def addItems(self, users):
+
+        #self.clearResultsList()
+        
+        for item in users:
+            widget = QLabel(item)
+            self.searchResultsWidgets.append(widget)
+            self.resultsLayout.addWidget(widget)
+
+    def clearResultsList(self):
+        for widget in self.searchResultsWidgets:
+            self.resultsLayout.removeWidget(widget)
+
+        self.searchResultsWidgets = []
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -298,7 +324,9 @@ class MainWindow(QMainWindow):
 
         # Search results section
         resultsScrollArea = QScrollArea()
-        resultsScrollArea.setWidget(ResultsList(self))
+        self.vkSearchResults = ResultsList(self)
+        resultsScrollArea.setWidget(self.vkSearchResults)
+        resultsScrollArea.setWidgetResizable(True)
         mainLayout.addWidget(resultsScrollArea)
         
         self.mainWidget = QWidget()
