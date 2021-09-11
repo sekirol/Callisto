@@ -3,9 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 
-from PyQt5.QtWidgets import QApplication, QCheckBox, QComboBox, QDateEdit, QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QScrollArea, QSpinBox, QStatusBar, QVBoxLayout, QWidget
-from PyQt5.QtWidgets import QFormLayout
-from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import *
 
 import vk_api, json, os
 
@@ -280,26 +278,30 @@ class SearchVkForm(QWidget):
         print(self.countryComoBox.currentText())
         print(self.citiesComoBox.currentText())
 
-        usersList = self.mainWindow.vkSession.getUsers(query=self.searchQueryField.text())
-        LFnames = [item['first_name']+' '+item['last_name'] for item in usersList]
-        self.mainWindow.vkSearchResults.addItems(LFnames)
+        #usersList = self.mainWindow.vkSession.getUsers(query=self.searchQueryField.text())
+        usersList = [{'first_name': 'Иванов',
+                      'last_name':  'Иван',
+                      'nickname':   'Иванович',
+                      'ages':       '20',
+                      'sex':        'Мужской',
+                      'friends':    '199',
+                      'subs':       '199'} for _ in range(5)]
+
+        self.mainWindow.vkSearchResults.addItems(usersList)
 
 class ResultsList(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
         self.searchResultsWidgets = []
-
         self.resultsLayout = QVBoxLayout()
-
         self.setLayout(self.resultsLayout)
 
     def addItems(self, users):
+        self.clearResultsList()
 
-        #self.clearResultsList()
-        
-        for item in users:
-            widget = QLabel(item)
+        for user in users:
+            widget = SearchResultsItem(self, user)
             self.searchResultsWidgets.append(widget)
             self.resultsLayout.addWidget(widget)
 
@@ -308,6 +310,51 @@ class ResultsList(QWidget):
             self.resultsLayout.removeWidget(widget)
 
         self.searchResultsWidgets = []
+
+class SearchResultsItem(QWidget):
+    def __init__(self, parent, userData):
+        super().__init__(parent)
+
+        labelString = "{first_name} {last_name} {nickname}".format(**userData)
+        name = QLabel(labelString)
+        name.setFrameStyle(QFrame.Box | QFrame.Raised)
+        
+        labelString = "Возраст: {ages}".format(**userData)
+        ages = QLabel(labelString)
+        ages.setFrameStyle(QFrame.Box | QFrame.Raised)
+
+        labelString = "Пол: {sex}".format(**userData)
+        sex = QLabel(labelString)
+        sex.setFrameStyle(QFrame.Box | QFrame.Raised)
+
+        labelString = "Друзья: {friends}".format(**userData)
+        friends = QLabel(labelString)
+        friends.setFrameStyle(QFrame.Box | QFrame.Raised)
+
+        labelString = "Подписчики: {subs}".format(**userData)
+        subs = QLabel(labelString)
+        subs.setFrameStyle(QFrame.Box | QFrame.Raised)
+
+        pageLink = QLabel("Ссылка")
+        pageLink.setFrameStyle(QFrame.Box | QFrame.Raised);
+
+        # Load photo section
+        avatarPixmap = QPixmap("./images/photo_200.jpg")
+        avatar = QLabel()
+        avatar.setPixmap(avatarPixmap)
+        avatar.setFrameStyle(QFrame.Box | QFrame.Raised);
+
+        mainLayout = QGridLayout()
+
+        mainLayout.addWidget(name,        0, 0, 1, 0)
+        mainLayout.addWidget(ages,        1, 0)
+        mainLayout.addWidget(sex,         2, 0)
+        mainLayout.addWidget(friends,     3, 0)
+        mainLayout.addWidget(subs,        4, 0)
+        mainLayout.addWidget(pageLink,    1, 1)        
+        mainLayout.addWidget(avatar,      1, 2, 4, 1)
+
+        self.setLayout(mainLayout)
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
