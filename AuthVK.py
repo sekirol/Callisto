@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPixmap
 
 from PyQt5.QtWidgets import *
 
-import vk_api, json, os
+import vk_api, json, os, datetime, calendar
 
 class VkApiInteraction():
     def __init__(self):
@@ -197,29 +197,47 @@ class SearchVkForm(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         
+        self.birthYearsRange = 100                           # Number of years between current year and last year for searching
+        self.currentYear     = datetime.date.today().year    # Current year is first year for searching
+
         self.mainWindow = parent
         
         self.setFixedWidth(200)
 
         self.searchQueryField = QLineEdit()
         self.sexComoBox = QComboBox()
-        self.birthDateField = QDateEdit()
-        self.ageFromField = QSpinBox()
-        self.ageToField = QSpinBox()
-        self.countryComoBox = QComboBox()
-        self.citiesComoBox = QComboBox()      
-
-        self.searchFormLayout = QVBoxLayout()
         
-        self.createSearchFields()
+        self.birthDayField = QSpinBox()
+        self.birthDayField.setMaximum(31)   # Set maximum number of days in any month
+        
+        self.birthMonthField = QComboBox()
+        # Month combo box filling
+        self.birthMonthField.addItems(['', *[calendar.month_name[month] for month in range(1, 13)]]) # Don't remove first empty item
+        self.birthMonthField.currentTextChanged.connect(self._birthMonthSelected)
 
-        self.setLayout(self.searchFormLayout)
-    
-        # Empty items in combo box
-        self.countryComoBox.addItems([''])
-        self.citiesComoBox.addItems([''])
-    
+        self.birthYearField = QComboBox()
+        # Birth year combo box filling
+        self.birthYearField.addItems(['', *[str(year) for year in range(self.currentYear, self.currentYear-self.birthYearsRange-1, -1)]])
+        self.birthYearField.currentTextChanged.connect(self._birthYearSelected)
+        
+        self.ageFromField = QSpinBox()
+        self.ageFromField.setMaximum(self.birthYearsRange)
+        self.ageFromField.valueChanged.connect(self._birthYearRangeEdited)
+        
+        self.ageToField = QSpinBox()
+        self.ageToField.setMaximum(self.birthYearsRange)
+        
+        self.countryComoBox = QComboBox()      
+        self.countryComoBox.addItems([''])  # Country field first empty item
         self._fillingCountryComboBox()
+
+        self.citiesComoBox = QComboBox()
+        self.citiesComoBox.addItems([''])   # City field first empty item
+
+        # Create current widget filling
+        self.searchFormLayout = QVBoxLayout()
+        self.createSearchFields()
+        self.setLayout(self.searchFormLayout)
 
     def createSearchFields(self):
         # Search query section
@@ -231,7 +249,11 @@ class SearchVkForm(QWidget):
         self.searchFormLayout.addWidget(self.sexComoBox)
         # Birth date section
         self.searchFormLayout.addWidget(QLabel("Birth date:"))
-        self.searchFormLayout.addWidget(self.birthDateField) 
+        birthDateLayout = QHBoxLayout()
+        birthDateLayout.addWidget(self.birthDayField)
+        birthDateLayout.addWidget(self.birthMonthField)
+        birthDateLayout.addWidget(self.birthYearField)
+        self.searchFormLayout.addLayout(birthDateLayout) 
         # Age limits section
         ageFromToLayout = QHBoxLayout()
         ageFromToLayout.addWidget(QLabel("Age from:"))
@@ -251,6 +273,48 @@ class SearchVkForm(QWidget):
         self.searchFormLayout.addWidget(searchButton)
         
         self.searchFormLayout.addStretch()
+
+    # Set minimum value for end of age range
+    def _birthYearRangeEdited(self):
+        self.ageToField.setMinimum(self.ageFromField.value())
+
+    # Change number of days in month
+    def _birthMonthSelected(self):
+        if self.birthYearField.currentText():
+            numberOfDays = calendar.monthrange(int(self.birthYearField.currentText()), self.birthMonthField.currentIndex())[1]
+        else:
+            # When year isn't selected
+            if self.birthMonthField.currentIndex() == 2:
+                # For february set maximum 29 days
+                numberOfDays = 29
+            else:
+                # For another month, set number of days in month, for current year
+                numberOfDays = calendar.monthrange(self.currentYear, self.birthMonthField.currentIndex())[1]
+
+        self.birthDayField.setMaximum(numberOfDays)
+
+    def _birthYearSelected(self):
+        # Change number of days in february
+        if self.birthMonthField.currentIndex() == 2:
+            self._birthMonthSelected()
+
+        if self.birthYearField.currentText() == '':
+            self.ageFromField.setValue(0)
+            self.ageToField.setValue(0)
+            
+            # Activate fields
+            self.ageFromField.setEnabled(True)
+            self.ageToField.setEnabled(True)
+        else:
+            # When birth year is selected, age is indicated in ageFromField and ageToField
+            selectedBirthYear = int(self.birthYearField.currentText())
+            selectedAge = self.currentYear-selectedBirthYear
+            self.ageFromField.setValue(selectedAge)
+            self.ageToField.setValue(selectedAge)
+
+            # Deactivate fields
+            self.ageFromField.setEnabled(False)
+            self.ageToField.setEnabled(False)
 
     def _fillingCountryComboBox(self):
         if self.mainWindow.vkSession.connectionStatus():
