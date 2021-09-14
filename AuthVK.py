@@ -1,4 +1,5 @@
 
+from re import search
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
@@ -173,7 +174,7 @@ class SearchVkForm(QWidget):
         self.searchFormLayout.addWidget(QLabel("Search query:"))
         self.searchFormLayout.addWidget(self.searchQueryField)
         # Selection sex section
-        self.sexComoBox.addItems(["Any", "Man", "Woman"])
+        self.sexComoBox.addItems(['', 'Woman', 'Man'])  # Don't change elements order
         self.searchFormLayout.addWidget(QLabel("Sex:"))
         self.searchFormLayout.addWidget(self.sexComoBox)
         # Birth date section
@@ -267,22 +268,30 @@ class SearchVkForm(QWidget):
             self.citiesComoBox.addItems(self.citiesList.keys())
 
     def getSearchResults(self):
-        print(self.searchQueryField.text())
-        print(self.sexComoBox.currentText())
-        print(self.ageFromField.value())
-        print(self.ageToField.value())
-        print(self.countryComoBox.currentText())
-        print(self.citiesComoBox.currentText())
 
-        #usersList = self.mainWindow.vkSession.getUsers(query=self.searchQueryField.text())
-        usersList = [{'first_name': 'Иванов',
-                      'last_name':  'Иван',
-                      'nickname':   'Иванович',
-                      'ages':       '20',
-                      'sex':        'Мужской',
-                      'friends':    '199',
-                      'subs':       '199'} for _ in range(5)]
+        searchQuery = VkSearchQuery()
+        
+        if self.searchQueryField.text():
+            searchQuery.setText(self.searchQueryField.text())
+        if self.sexComoBox.currentIndex():
+            searchQuery.setSex(self.sexComoBox.currentIndex())
+        # Birth date section
+        if self.birthDayField.value():
+            searchQuery.setBirthDay(self.birthDayField.value())
+        if self.birthMonthField.currentIndex():
+            searchQuery.setBirthMonth(self.birthMonthField.currentIndex())
+        # Set birth date year or age limits
+        if self.birthYearField.currentText():
+            searchQuery.setBirthYear(int(self.birthYearField.currentText()))
+        else:
+            searchQuery.setAgesLimits(self.ageFromField.value(), self.ageToField.value())
+        # Country and city section
+        if self.countryComoBox.currentText():
+            searchQuery.setCountry(self.countriesList[self.countryComoBox.currentText()])
+        if self.citiesComoBox.currentText():
+            searchQuery.setCity(self.citiesList[self.citiesComoBox.currentText()])
 
+        usersList = self.mainWindow.vkSession.getUsers(searchQuery.getQuery())
         self.mainWindow.vkSearchResults.addItems(usersList)
 
 class ResultsList(QWidget):
@@ -315,19 +324,19 @@ class SearchResultsItem(QWidget):
         name = QLabel(labelString)
         name.setFrameStyle(QFrame.Box | QFrame.Raised)
         
-        labelString = "Возраст: {ages}".format(**userData)
+        labelString = "Bdate"   #"Дата рождения: {bdate}".format(**userData)
         ages = QLabel(labelString)
         ages.setFrameStyle(QFrame.Box | QFrame.Raised)
 
-        labelString = "Пол: {sex}".format(**userData)
+        labelString = "Sex"     #"Пол: {sex}".format(**userData)
         sex = QLabel(labelString)
         sex.setFrameStyle(QFrame.Box | QFrame.Raised)
 
-        labelString = "Друзья: {friends}".format(**userData)
+        labelString = "Friends" #"Друзья: {friends}".format(**userData)
         friends = QLabel(labelString)
         friends.setFrameStyle(QFrame.Box | QFrame.Raised)
 
-        labelString = "Подписчики: {subs}".format(**userData)
+        labelString = "Subs"   #"Подписчики: {subs}".format(**userData)
         subs = QLabel(labelString)
         subs.setFrameStyle(QFrame.Box | QFrame.Raised)
 
