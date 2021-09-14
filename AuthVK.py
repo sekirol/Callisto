@@ -374,13 +374,20 @@ class MainWindow(QMainWindow):
         mainLayout = QHBoxLayout()
         mainLayout.addWidget(SearchVkForm(self))
 
+        self.searchInfoLabel = QLabel("Press \"Search\" button to start searching")
+        
         # Search results section
         resultsScrollArea = QScrollArea()
         self.vkSearchResults = ResultsList(self)
         resultsScrollArea.setWidget(self.vkSearchResults)
         resultsScrollArea.setWidgetResizable(True)
-        mainLayout.addWidget(resultsScrollArea)
         
+        searchResultsLayout = QVBoxLayout()
+        searchResultsLayout.addWidget(self.searchInfoLabel)
+        searchResultsLayout.addWidget(resultsScrollArea)
+
+        mainLayout.addLayout(searchResultsLayout)
+
         self.mainWidget = QWidget()
         self.mainWidget.setLayout(mainLayout)
         self.setCentralWidget(self.mainWidget)
