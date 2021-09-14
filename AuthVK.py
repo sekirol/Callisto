@@ -280,17 +280,21 @@ class SearchVkForm(QWidget):
 
     # Change number of days in month
     def _birthMonthSelected(self):
-        if self.birthYearField.currentText():
-            numberOfDays = calendar.monthrange(int(self.birthYearField.currentText()), self.birthMonthField.currentIndex())[1]
-        else:
-            # When year isn't selected
-            if self.birthMonthField.currentIndex() == 2:
-                # For february set maximum 29 days
-                numberOfDays = 29
-            else:
-                # For another month, set number of days in month, for current year
-                numberOfDays = calendar.monthrange(self.currentYear, self.birthMonthField.currentIndex())[1]
+        # When month is not selected, birth day max value is 31
+        numberOfDays = 31
 
+        if self.birthMonthField.currentIndex():
+            if self.birthYearField.currentText():
+                numberOfDays = calendar.monthrange(int(self.birthYearField.currentText()), self.birthMonthField.currentIndex())[1]
+            else:
+                # When year isn't selected
+                if self.birthMonthField.currentIndex() == 2:
+                    # For february set maximum 29 days
+                    numberOfDays = 29
+                else:
+                    # For another month, set number of days in month, for current year
+                    numberOfDays = calendar.monthrange(self.currentYear, self.birthMonthField.currentIndex())[1]
+             
         self.birthDayField.setMaximum(numberOfDays)
 
     def _birthYearSelected(self):
@@ -336,7 +340,6 @@ class SearchVkForm(QWidget):
     def getSearchResults(self):
         print(self.searchQueryField.text())
         print(self.sexComoBox.currentText())
-        print(self.birthDateField.date())
         print(self.ageFromField.value())
         print(self.ageToField.value())
         print(self.countryComoBox.currentText())
