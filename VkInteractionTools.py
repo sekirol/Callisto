@@ -4,7 +4,7 @@ import vk_api, json, os
 class VkSearchQuery():
     def __init__(self):
         
-        self.fields = "nickname, bdate, sex"
+        self.fields = "nickname, bdate, sex, city, country"
         self.count  = 100
         
         self.query = {'fields':self.fields,

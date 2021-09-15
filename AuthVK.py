@@ -320,46 +320,53 @@ class SearchResultsItem(QWidget):
     def __init__(self, parent, userData):
         super().__init__(parent)
 
-        labelString = "{first_name} {last_name} {nickname}".format(**userData)
-        name = QLabel(labelString)
-        name.setFrameStyle(QFrame.Box | QFrame.Raised)
+        self.accountInfo = userData
+
+        self.mainLayout = QVBoxLayout()
+
+        self.addNameData()
+        self.addAgeData()
+        self.addResidenceData()
+
+        self.setLayout(self.mainLayout)
+
+    def addNameData(self):
+        nameParts = []
+        if self.accountInfo.get('first_name'):
+            nameParts.append(self.accountInfo['first_name'])
+        if self.accountInfo.get('last_name'):
+            nameParts.append(self.accountInfo['last_name'])
+        if self.accountInfo.get('nickname'):
+            nameParts.append(self.accountInfo['nickname'])
+
+        if nameParts:
+            labelString = ' '.join(nameParts)
+        else:
+            labelString = "Name is not available"
         
-        labelString = "Bdate"   #"Дата рождения: {bdate}".format(**userData)
-        ages = QLabel(labelString)
-        ages.setFrameStyle(QFrame.Box | QFrame.Raised)
+        labelObject = QLabel(labelString)
+        labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
+        self.mainLayout.addWidget(labelObject)
 
-        labelString = "Sex"     #"Пол: {sex}".format(**userData)
-        sex = QLabel(labelString)
-        sex.setFrameStyle(QFrame.Box | QFrame.Raised)
+    def addAgeData(self):
+        if self.accountInfo.get('bdate'):
+            labelString = "{}".format(self.accountInfo['bdate'])
+            labelObject = QLabel(labelString)
+            labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
+            self.mainLayout.addWidget(labelObject)
 
-        labelString = "Friends" #"Друзья: {friends}".format(**userData)
-        friends = QLabel(labelString)
-        friends.setFrameStyle(QFrame.Box | QFrame.Raised)
+    def addResidenceData(self):
+        stringParts = []    # List for country and city names
+        if self.accountInfo.get('country'):
+            stringParts.append(self.accountInfo['country']['title'])
 
-        labelString = "Subs"   #"Подписчики: {subs}".format(**userData)
-        subs = QLabel(labelString)
-        subs.setFrameStyle(QFrame.Box | QFrame.Raised)
-
-        pageLink = QLabel("Ссылка")
-        pageLink.setFrameStyle(QFrame.Box | QFrame.Raised);
-
-        # Load photo section
-        avatarPixmap = QPixmap("./images/photo_200.jpg")
-        avatar = QLabel()
-        avatar.setPixmap(avatarPixmap)
-        avatar.setFrameStyle(QFrame.Box | QFrame.Raised);
-
-        mainLayout = QGridLayout()
-
-        mainLayout.addWidget(name,        0, 0, 1, 0)
-        mainLayout.addWidget(ages,        1, 0)
-        mainLayout.addWidget(sex,         2, 0)
-        mainLayout.addWidget(friends,     3, 0)
-        mainLayout.addWidget(subs,        4, 0)
-        mainLayout.addWidget(pageLink,    1, 1)        
-        mainLayout.addWidget(avatar,      1, 2, 4, 1)
-
-        self.setLayout(mainLayout)
+        if self.accountInfo.get('city'):
+            stringParts.append(self.accountInfo['city']['title'])
+            
+        if stringParts:
+            labelObject = QLabel(', '.join(stringParts))
+            labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
+            self.mainLayout.addWidget(labelObject)
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
