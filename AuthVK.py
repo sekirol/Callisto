@@ -292,7 +292,13 @@ class SearchVkForm(QWidget):
             searchQuery.setCity(self.citiesList[self.citiesComoBox.currentText()])
 
         usersList = self.mainWindow.vkSession.getUsers(searchQuery.getQuery())
-        self.mainWindow.vkSearchResults.addItems(usersList)
+        
+        accounts = []
+        for user in usersList:
+            userInfo = VkAccountInfo(user)
+            accounts.append(userInfo)
+            
+        #self.mainWindow.vkSearchResults.addItems(usersList)
 
 class ResultsList(QWidget):
     def __init__(self, parent):
@@ -356,17 +362,9 @@ class SearchResultsItem(QWidget):
             self.mainLayout.addWidget(labelObject)
 
     def addResidenceData(self):
-        stringParts = []    # List for country and city names
-        if self.accountInfo.get('country'):
-            stringParts.append(self.accountInfo['country']['title'])
-
-        if self.accountInfo.get('city'):
-            stringParts.append(self.accountInfo['city']['title'])
-            
-        if stringParts:
-            labelObject = QLabel(', '.join(stringParts))
-            labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
-            self.mainLayout.addWidget(labelObject)
+        labelObject = QLabel(', '.join(stringParts))
+        labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
+        self.mainLayout.addWidget(labelObject)
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):

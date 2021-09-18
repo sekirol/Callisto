@@ -1,10 +1,10 @@
 
-import vk_api, json, os
+import vk_api, json, os, requests
 
 class VkSearchQuery():
     def __init__(self):
         
-        self.fields = "nickname, bdate, sex, city, country"
+        self.fields = "nickname, bdate, sex, city, country, photo_200"
         self.count  = 100
         
         self.query = {'fields':self.fields,
@@ -39,6 +39,45 @@ class VkSearchQuery():
 
     def getQuery(self):
         return self.query
+
+class VkAccountInfo():
+    def __init__(self, accountData):
+
+        self.accountData = accountData
+
+        self.userId = accountData['id']
+
+        self.setUserName()
+        self.setResidenceData()
+        self.setAgeData()
+        # self.getAvatar()
+
+    def setUserName(self):
+        self.firstName = self.accountData.get('first_name')
+        self.lastName = self.accountData.get('last_name')
+        self.nickname = self.accountData.get('nickname')
+
+    def setResidenceData(self):
+        self.city = self.accountData['city']['title'] if self.accountData.get('city') else None
+        self.country = self.accountData['country']['title'] if self.accountData.get('country') else None
+
+    def setAgeData(self):
+        self.bdate = self.accountData.get('bdate')
+
+    def setAccessData(self):
+        pass
+
+    def getAvatar(self):
+        imageFolder = 'images'
+        imageSize = 'photo_200'
+        fileName = "{}\{}_{}.jpg".format(imageFolder, imageSize, self.userId)
+        
+        if not os.path.exists(fileName):
+            imgUrl = self.accountData.get('photo_200')
+            if imgUrl:
+                imgData = requests.get(imgUrl)
+                with open(fileName, 'wb') as imgFile:
+                    imgFile.write(imgData.content)
 
 class VkApiInteraction():
     def __init__(self):
