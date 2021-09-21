@@ -47,10 +47,18 @@ class VkAccountInfo():
 
         self.userId = accountData['id']
 
+        self.setAccountStatus()
         self.setUserName()
         self.setResidenceData()
         self.setAgeData()
         # self.getAvatar()
+
+    def setAccountStatus(self):
+        self.status = 'opened'
+        if self.accountData.get('deactivated'):
+            self.status = self.accountData.get('deactivated')
+        if self.accountData['is_closed']:
+            self.status = 'closed'
 
     def setUserName(self):
         self.firstName = self.accountData.get('first_name')

@@ -297,7 +297,13 @@ class SearchVkForm(QWidget):
         for user in usersList:
             userInfo = VkAccountInfo(user)
             accounts.append(userInfo)
-            
+            # -- Show VK account information ------------------------------------------------------
+            print("{} {}".format(userInfo.userId, userInfo.status))
+            print("{} {} {}".format(userInfo.firstName, userInfo.lastName, userInfo.nickname))
+            print("{}".format(userInfo.bdate))
+            print("{} {}".format(userInfo.country, userInfo.city))
+            print()
+            # -------------------------------------------------------------------------------------
         #self.mainWindow.vkSearchResults.addItems(usersList)
 
 class ResultsList(QWidget):
