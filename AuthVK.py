@@ -304,8 +304,14 @@ class SearchVkForm(QWidget):
             print("{} {}".format(userInfo.country, userInfo.city))
             print()
             # -------------------------------------------------------------------------------------
+        
+        self.showSearchSummary(accounts)
         #self.mainWindow.vkSearchResults.addItems(usersList)
 
+    def showSearchSummary(self, accounts):
+        summaryString = "Users found: {}. Closed pages: {}".format(len(accounts), len([account for account in accounts if account.status == 'closed']))
+        self.mainWindow.searchInfoLabel.setText(summaryString)
+    
 class ResultsList(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
