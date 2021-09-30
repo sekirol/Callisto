@@ -51,6 +51,7 @@ class VkAccountInfo():
         self.setUserName()
         self.setResidenceData()
         self.setAgeData()
+        self.setCountersData()
         # self.getAvatar()
 
     def setAccountStatus(self):
@@ -72,8 +73,13 @@ class VkAccountInfo():
     def setAgeData(self):
         self.bdate = self.accountData.get('bdate')
 
-    def setAccessData(self):
-        pass
+    def setCountersData(self):
+        if self.accountData['counters']:
+            countersDict = self.accountData['counters']
+
+            self.friendsNumber = countersDict.get('friends')
+            self.followersNumber = countersDict.get('followers')
+            self.photosNumber = countersDict.get('photos')
 
     def getAvatar(self):
         imageFolder = 'images'

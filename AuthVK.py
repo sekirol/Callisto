@@ -295,18 +295,18 @@ class SearchVkForm(QWidget):
         
         accounts = []
         for user in usersList:
+            # To obtain counters data need to make request for only one user
+            user['counters'] = self.getCountersData(user['id'])
+
             userInfo = VkAccountInfo(user)
             accounts.append(userInfo)
-            # -- Show VK account information ------------------------------------------------------
-            print("{} {}".format(userInfo.userId, userInfo.status))
-            print("{} {} {}".format(userInfo.firstName, userInfo.lastName, userInfo.nickname))
-            print("{}".format(userInfo.bdate))
-            print("{} {}".format(userInfo.country, userInfo.city))
-            print()
-            # -------------------------------------------------------------------------------------
-        
+
         self.showSearchSummary(accounts)
         #self.mainWindow.vkSearchResults.addItems(usersList)
+
+    def getCountersData(self, userId):
+        userInfo = self.mainWindow.vkSession.api.users.get(user_ids=userId, fields='counters')[-1]
+        return userInfo.get('counters')
 
     def showSearchSummary(self, accounts):
         summaryString = "Users found: {}. Closed pages: {}".format(len(accounts), len([account for account in accounts if account.status == 'closed']))
