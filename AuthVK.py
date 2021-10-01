@@ -5,8 +5,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 
 from PyQt5.QtWidgets import *
-
-import datetime, calendar
+from datetime import date, datetime
+import calendar
 
 from VkInteractionTools import *
 
@@ -128,7 +128,7 @@ class SearchVkForm(QWidget):
         super().__init__(parent)
         
         self.birthYearsRange = 100                           # Number of years between current year and last year for searching
-        self.currentYear     = datetime.date.today().year    # Current year is first year for searching
+        self.currentYear     = date.today().year             # Current year is first year for searching
 
         self.mainWindow = parent
         
@@ -296,13 +296,13 @@ class SearchVkForm(QWidget):
         accounts = []
         for user in usersList:
             # To obtain counters data need to make request for only one user
-            user['counters'] = self.getCountersData(user['id'])
+            #user['counters'] = self.getCountersData(user['id'])
 
             userInfo = VkAccountInfo(user)
             accounts.append(userInfo)
 
         self.showSearchSummary(accounts)
-        #self.mainWindow.vkSearchResults.addItems(usersList)
+        self.mainWindow.vkSearchResults.addItems(accounts)
 
     def getCountersData(self, userId):
         userInfo = self.mainWindow.vkSession.api.users.get(user_ids=userId, fields='counters')[-1]
@@ -342,23 +342,24 @@ class SearchResultsItem(QWidget):
 
         self.mainLayout = QVBoxLayout()
 
+        self.addPageStatusData()
         self.addNameData()
         self.addAgeData()
         self.addResidenceData()
 
         self.setLayout(self.mainLayout)
 
-    def addNameData(self):
-        nameParts = []
-        if self.accountInfo.get('first_name'):
-            nameParts.append(self.accountInfo['first_name'])
-        if self.accountInfo.get('last_name'):
-            nameParts.append(self.accountInfo['last_name'])
-        if self.accountInfo.get('nickname'):
-            nameParts.append(self.accountInfo['nickname'])
+    def addPageStatusData(self):
+        labelString = "id:{} - {}".format(self.accountInfo.userId, self.accountInfo.status)
 
-        if nameParts:
-            labelString = ' '.join(nameParts)
+        labelObject = QLabel(labelString)
+        labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
+        self.mainLayout.addWidget(labelObject)
+
+    def addNameData(self):
+        namePartsList = [self.accountInfo.firstName, self.accountInfo.lastName, self.accountInfo.nickname]
+        if namePartsList:
+            labelString = ' '.join(namePartsList)
         else:
             labelString = "Name is not available"
         
@@ -367,16 +368,42 @@ class SearchResultsItem(QWidget):
         self.mainLayout.addWidget(labelObject)
 
     def addAgeData(self):
-        if self.accountInfo.get('bdate'):
-            labelString = "{}".format(self.accountInfo['bdate'])
+        if self.accountInfo.bdate:
+            try:
+                bdate = datetime.strptime(self.accountInfo.bdate, "%d.%m.%Y")
+            except:
+                bdate = datetime.strptime(self.accountInfo.bdate, "%d.%m")
+            
+            if bdate.year == 1900:
+                # When a birth year are hidden
+                labelString = bdate.strftime("%d %b")
+            else:
+                labelString = bdate.strftime("%d %b %Y")
+
+                today = datetime.now()
+                # Show user age
+                age = today.year - bdate.year
+                if (bdate.month, bdate.day) > (today.month, today.day):
+                    age -= 1 # hasnt't had birthday this year
+                
+                labelString += " ({})".format(age)
+
             labelObject = QLabel(labelString)
             labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
             self.mainLayout.addWidget(labelObject)
 
     def addResidenceData(self):
-        labelObject = QLabel(', '.join(stringParts))
-        labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
-        self.mainLayout.addWidget(labelObject)
+        residencePartsList = []
+        if self.accountInfo.country:
+            residencePartsList.append(self.accountInfo.country)
+        if self.accountInfo.city:
+            residencePartsList.append(self.accountInfo.city)
+
+        if residencePartsList:
+            labelString = ', '.join(residencePartsList)            
+            labelObject = QLabel(labelString)
+            labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
+            self.mainLayout.addWidget(labelObject)
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):

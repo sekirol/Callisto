@@ -51,7 +51,7 @@ class VkAccountInfo():
         self.setUserName()
         self.setResidenceData()
         self.setAgeData()
-        self.setCountersData()
+        # self.setCountersData()
         # self.getAvatar()
 
     def setAccountStatus(self):
@@ -62,9 +62,9 @@ class VkAccountInfo():
             self.status = 'closed'
 
     def setUserName(self):
-        self.firstName = self.accountData.get('first_name')
-        self.lastName = self.accountData.get('last_name')
-        self.nickname = self.accountData.get('nickname')
+        self.firstName = self.accountData['first_name'] if self.accountData.get('first_name') else ""
+        self.lastName = self.accountData['last_name'] if self.accountData.get('last_name') else ""
+        self.nickname = self.accountData['nickname'] if self.accountData.get('nickname') else ""
 
     def setResidenceData(self):
         self.city = self.accountData['city']['title'] if self.accountData.get('city') else None
