@@ -1,5 +1,4 @@
 
-from re import search
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
@@ -355,8 +354,6 @@ class SearchResultsItem(QWidget):
         self.textFieldsLayout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
         self.addPhoto()
-        self.addPhoto()
-        self.addPhoto()
 
         self.setLayout(self.mainLayout)
 
@@ -414,12 +411,18 @@ class SearchResultsItem(QWidget):
             self.textFieldsLayout.addWidget(labelObject)
 
     def addPhoto(self):
-        imageSource = "./images/photo_200.jpg"
+        # Place downloaded image
+        imageSource = "./images/photo_200_{}.jpg".format(self.accountInfo.userId)   
+        if not os.path.exists(imageSource):
+            # Place dummy image
+            imageSource = "./images/photo_200.jpg"
+
         imagePixmap = QPixmap(imageSource, "JPG")
         
         imageLabel = QLabel()
         imageLabel.setPixmap(imagePixmap)
         self.mainLayout.addWidget(imageLabel)
+        self.mainLayout.setAlignment(imageLabel, Qt.AlignRight)
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
