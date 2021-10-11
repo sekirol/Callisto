@@ -1,4 +1,5 @@
 /.vscode
 *.json
 /images
+!/images/photo_200.jpg
 /__*

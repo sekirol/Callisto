@@ -340,21 +340,32 @@ class SearchResultsItem(QWidget):
 
         self.accountInfo = userData
 
-        self.mainLayout = QVBoxLayout()
+        self.textFieldsLayout = QVBoxLayout()
+        self.mainLayout = QHBoxLayout()
 
+        self.mainLayout.addLayout(self.textFieldsLayout)
+
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setSpacing(0)
+        
         self.addPageStatusData()
         self.addNameData()
         self.addAgeData()
         self.addResidenceData()
+        self.textFieldsLayout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+
+        self.addPhoto()
+        self.addPhoto()
+        self.addPhoto()
 
         self.setLayout(self.mainLayout)
 
     def addPageStatusData(self):
-        labelString = "id:{} - {}".format(self.accountInfo.userId, self.accountInfo.status)
+        labelString = "id: <a href='https://vk.com/id{0}'>{0}</a> - {1}".format(self.accountInfo.userId, self.accountInfo.status)
 
         labelObject = QLabel(labelString)
-        labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
-        self.mainLayout.addWidget(labelObject)
+        labelObject.setOpenExternalLinks(True)
+        self.textFieldsLayout.addWidget(labelObject)
 
     def addNameData(self):
         namePartsList = [self.accountInfo.firstName, self.accountInfo.lastName, self.accountInfo.nickname]
@@ -364,8 +375,7 @@ class SearchResultsItem(QWidget):
             labelString = "Name is not available"
         
         labelObject = QLabel(labelString)
-        labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
-        self.mainLayout.addWidget(labelObject)
+        self.textFieldsLayout.addWidget(labelObject)
 
     def addAgeData(self):
         if self.accountInfo.bdate:
@@ -389,8 +399,7 @@ class SearchResultsItem(QWidget):
                 labelString += " ({})".format(age)
 
             labelObject = QLabel(labelString)
-            labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
-            self.mainLayout.addWidget(labelObject)
+            self.textFieldsLayout.addWidget(labelObject)
 
     def addResidenceData(self):
         residencePartsList = []
@@ -402,8 +411,15 @@ class SearchResultsItem(QWidget):
         if residencePartsList:
             labelString = ', '.join(residencePartsList)            
             labelObject = QLabel(labelString)
-            labelObject.setFrameStyle(QFrame.Box | QFrame.Raised)
-            self.mainLayout.addWidget(labelObject)
+            self.textFieldsLayout.addWidget(labelObject)
+
+    def addPhoto(self):
+        imageSource = "./images/photo_200.jpg"
+        imagePixmap = QPixmap(imageSource, "JPG")
+        
+        imageLabel = QLabel()
+        imageLabel.setPixmap(imagePixmap)
+        self.mainLayout.addWidget(imageLabel)
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
