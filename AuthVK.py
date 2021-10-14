@@ -317,7 +317,12 @@ class ResultsList(QWidget):
 
         self.searchResultsWidgets = []
         self.resultsLayout = QVBoxLayout()
+        self.resultsLayout.setContentsMargins(0, 0, 0, 0)
+        self.resultsLayout.setSpacing(0)
         self.setLayout(self.resultsLayout)
+
+        self.expandListButton = QPushButton('Show more')
+        self.expandListButton.pressed.connect(self.expandResultsList)
 
     def addItems(self, users):
         self.clearResultsList()
@@ -327,11 +332,34 @@ class ResultsList(QWidget):
             self.searchResultsWidgets.append(widget)
             self.resultsLayout.addWidget(widget)
 
+        # Place "Show more" button to end of list if search results exist
+        if self.searchResultsWidgets:
+            self.addExpandListButton()
+
     def clearResultsList(self):
+        # Remove "Show more" button from list if search results exist
+        if self.searchResultsWidgets:
+            self.removeExpandListButton()
+        
         for widget in self.searchResultsWidgets:
             self.resultsLayout.removeWidget(widget)
 
         self.searchResultsWidgets = []
+
+    def addExpandListButton(self):
+        self.resultsLayout.addWidget(self.expandListButton)
+
+    def removeExpandListButton(self):
+        self.resultsLayout.removeWidget(self.expandListButton) 
+
+    def expandResultsList(self):
+        # Remove button from current list
+        self.removeExpandListButton()
+
+        # Add new items to list
+
+        # Place button to expanded list
+        self.addExpandListButton()
 
 class SearchResultsItem(QWidget):
     def __init__(self, parent, userData):
