@@ -301,7 +301,7 @@ class SearchVkForm(QWidget):
             accounts.append(userInfo)
 
         self.showSearchSummary(accounts)
-        self.mainWindow.vkSearchResults.addItems(accounts)
+        self.mainWindow.vkSearchResults.addSearchResults(accounts)
 
     def getCountersData(self, userId):
         userInfo = self.mainWindow.vkSession.api.users.get(user_ids=userId, fields='counters')[-1]
@@ -315,6 +315,10 @@ class ResultsList(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.searchResultsAccounts = []
+        self.lastDisplayedAccount = 0
+        self.resultsListLength = 10
+
         self.searchResultsWidgets = []
         self.resultsLayout = QVBoxLayout()
         self.resultsLayout.setContentsMargins(0, 0, 0, 0)
@@ -324,16 +328,26 @@ class ResultsList(QWidget):
         self.expandListButton = QPushButton('Show more')
         self.expandListButton.pressed.connect(self.expandResultsList)
 
-    def addItems(self, users):
+    def addSearchResults(self, users):
+        # Remove old serach results
         self.clearResultsList()
 
-        for user in users:
-            widget = SearchResultsItem(self, user)
+        self.searchResultsAccounts = users
+        self.displaySearchItems()
+
+    def displaySearchItems(self):       
+        accountFromIndex = self.lastDisplayedAccount
+        self.lastDisplayedAccount += self.resultsListLength
+        accountToIndex = self.lastDisplayedAccount
+        accountsForDisplay = self.searchResultsAccounts[accountFromIndex : accountToIndex]
+
+        for account in accountsForDisplay:
+            widget = SearchResultsItem(self, account)
             self.searchResultsWidgets.append(widget)
             self.resultsLayout.addWidget(widget)
 
         # Place "Show more" button to end of list if search results exist
-        if self.searchResultsWidgets:
+        if self.searchResultsWidgets and self.lastDisplayedAccount < len(self.searchResultsAccounts):
             self.addExpandListButton()
 
     def clearResultsList(self):
@@ -345,21 +359,22 @@ class ResultsList(QWidget):
             self.resultsLayout.removeWidget(widget)
 
         self.searchResultsWidgets = []
+        self.lastDisplayedAccount = 0
 
     def addExpandListButton(self):
+        self.expandListButton.setVisible(True)
         self.resultsLayout.addWidget(self.expandListButton)
 
     def removeExpandListButton(self):
-        self.resultsLayout.removeWidget(self.expandListButton) 
+        # Before removing the button, it must be hidden
+        self.expandListButton.setVisible(False)
+        self.resultsLayout.removeWidget(self.expandListButton)
 
     def expandResultsList(self):
         # Remove button from current list
         self.removeExpandListButton()
 
-        # Add new items to list
-
-        # Place button to expanded list
-        self.addExpandListButton()
+        self.displaySearchItems()
 
 class SearchResultsItem(QWidget):
     def __init__(self, parent, userData):
@@ -372,7 +387,7 @@ class SearchResultsItem(QWidget):
 
         self.mainLayout.addLayout(self.textFieldsLayout)
 
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setContentsMargins(8, 2, 8, 2)
         self.mainLayout.setSpacing(0)
         
         self.addPageStatusData()

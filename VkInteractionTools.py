@@ -52,7 +52,7 @@ class VkAccountInfo():
         self.setResidenceData()
         self.setAgeData()
         # self.setCountersData()
-        self.getAvatar()
+        # self.getAvatar()
 
     def setAccountStatus(self):
         self.status = 'opened'
