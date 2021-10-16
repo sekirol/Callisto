@@ -294,14 +294,14 @@ class SearchVkForm(QWidget):
         
         accounts = []
         for user in usersList:
-            # To obtain counters data need to make request for only one user
-            #user['counters'] = self.getCountersData(user['id'])
-
             userInfo = VkAccountInfo(user)
             accounts.append(userInfo)
 
         self.showSearchSummary(accounts)
         self.mainWindow.vkSearchResults.addSearchResults(accounts)
+
+        # Show top of results list
+        self.scrollingToTopOfList()
 
     def getCountersData(self, userId):
         userInfo = self.mainWindow.vkSession.api.users.get(user_ids=userId, fields='counters')[-1]
@@ -311,13 +311,17 @@ class SearchVkForm(QWidget):
         summaryString = "Users found: {}. Closed pages: {}".format(len(accounts), len([account for account in accounts if account.status == 'closed']))
         self.mainWindow.searchInfoLabel.setText(summaryString)
     
+    def scrollingToTopOfList(self):
+        verticalScrollBar = self.mainWindow.resultsScrollArea.verticalScrollBar()
+        verticalScrollBar.setValue(verticalScrollBar.minimum())
+
 class ResultsList(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
         self.searchResultsAccounts = []
         self.lastDisplayedAccount = 0
-        self.resultsListLength = 10
+        self.resultsListLength = 100
 
         self.searchResultsWidgets = []
         self.resultsLayout = QVBoxLayout()
@@ -333,9 +337,9 @@ class ResultsList(QWidget):
         self.clearResultsList()
 
         self.searchResultsAccounts = users
-        self.displaySearchItems()
+        self.displaySearchResultItems()
 
-    def displaySearchItems(self):       
+    def displaySearchResultItems(self):       
         accountFromIndex = self.lastDisplayedAccount
         self.lastDisplayedAccount += self.resultsListLength
         accountToIndex = self.lastDisplayedAccount
@@ -373,8 +377,7 @@ class ResultsList(QWidget):
     def expandResultsList(self):
         # Remove button from current list
         self.removeExpandListButton()
-
-        self.displaySearchItems()
+        self.displaySearchResultItems()
 
 class SearchResultsItem(QWidget):
     def __init__(self, parent, userData):
@@ -483,14 +486,15 @@ class MainWindow(QMainWindow):
         self.searchInfoLabel = QLabel("Press \"Search\" button to start searching")
         
         # Search results section
-        resultsScrollArea = QScrollArea()
+        self.resultsScrollArea = QScrollArea()
         self.vkSearchResults = ResultsList(self)
-        resultsScrollArea.setWidget(self.vkSearchResults)
-        resultsScrollArea.setWidgetResizable(True)
-        
+        self.resultsScrollArea.setWidget(self.vkSearchResults)
+        self.resultsScrollArea.setWidgetResizable(True)
+        self.resultsScrollArea.setMinimumWidth(900)
+
         searchResultsLayout = QVBoxLayout()
         searchResultsLayout.addWidget(self.searchInfoLabel)
-        searchResultsLayout.addWidget(resultsScrollArea)
+        searchResultsLayout.addWidget(self.resultsScrollArea)
 
         mainLayout.addLayout(searchResultsLayout)
 

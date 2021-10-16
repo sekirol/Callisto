@@ -5,7 +5,7 @@ class VkSearchQuery():
     def __init__(self):
         
         self.fields = "nickname, bdate, sex, city, country, photo_200"
-        self.count  = 100
+        self.count  = 1000
         
         self.query = {'fields':self.fields,
                       'count':self.count} 
@@ -51,8 +51,6 @@ class VkAccountInfo():
         self.setUserName()
         self.setResidenceData()
         self.setAgeData()
-        # self.setCountersData()
-        # self.getAvatar()
 
     def setAccountStatus(self):
         self.status = 'opened'
@@ -62,9 +60,10 @@ class VkAccountInfo():
             self.status = 'closed'
 
     def setUserName(self):
-        self.firstName = self.accountData['first_name'] if self.accountData.get('first_name') else ""
-        self.lastName = self.accountData['last_name'] if self.accountData.get('last_name') else ""
-        self.nickname = self.accountData['nickname'] if self.accountData.get('nickname') else ""
+        # Save first symbols of each name
+        self.firstName = self.accountData['first_name'][:15] if self.accountData.get('first_name') else ""
+        self.lastName = self.accountData['last_name'][:15] if self.accountData.get('last_name') else ""
+        self.nickname = self.accountData['nickname'][:15] if self.accountData.get('nickname') else ""
 
     def setResidenceData(self):
         self.city = self.accountData['city']['title'] if self.accountData.get('city') else None
