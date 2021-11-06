@@ -73,12 +73,7 @@ class VkAccountInfo():
         self.bdate = self.accountData.get('bdate')
 
     def setCountersData(self):
-        if self.accountData['counters']:
-            countersDict = self.accountData['counters']
-
-            self.friendsNumber = countersDict.get('friends')
-            self.followersNumber = countersDict.get('followers')
-            self.photosNumber = countersDict.get('photos')
+        self.counters = self.accountData.get('counters')
 
     def getAvatar(self):
         imageFolder = 'images'

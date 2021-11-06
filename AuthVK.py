@@ -79,10 +79,10 @@ class AuthVkDialog(QDialog):
 
     def enterAuthData(self):       
 
-        self.mainWindow.vkSession.setAuthData(login=self.loginField.text(), password=self.pwdField.text())
+        vkSession.setAuthData(login=self.loginField.text(), password=self.pwdField.text())
 
         try:
-            self.mainWindow.vkSession.getConnection()
+            vkSession.getConnection()
             self.mainWindow.updateStatusBar()
             self.close()
         except vk_api.exceptions.AuthError as connectException:
@@ -250,8 +250,8 @@ class SearchVkForm(QWidget):
             self.ageToField.setEnabled(False)
 
     def _fillingCountryComboBox(self):
-        if self.mainWindow.vkSession.connectionStatus():
-            self.countriesList = self.mainWindow.vkSession.getCountriesList()
+        if vkSession.connectionStatus():
+            self.countriesList = vkSession.getCountriesList()
             self.countryComoBox.addItems(self.countriesList.keys())
             
             self.countryComoBox.currentTextChanged.connect(self._fillingCityComboBox)
@@ -263,7 +263,7 @@ class SearchVkForm(QWidget):
 
         if countryName:
             countryId = self.countriesList[countryName]
-            self.citiesList = self.mainWindow.vkSession.getCitiesList(countryId)
+            self.citiesList = vkSession.getCitiesList(countryId)
             self.citiesComoBox.addItems(self.citiesList.keys())
 
     def getSearchResults(self):
@@ -290,7 +290,7 @@ class SearchVkForm(QWidget):
         if self.citiesComoBox.currentText():
             searchQuery.setCity(self.citiesList[self.citiesComoBox.currentText()])
 
-        usersList = self.mainWindow.vkSession.getUsers(searchQuery.getQuery())
+        usersList = vkSession.getUsers(searchQuery.getQuery())
         
         accounts = []
         for user in usersList:
@@ -302,10 +302,6 @@ class SearchVkForm(QWidget):
 
         # Show top of results list
         self.scrollingToTopOfList()
-
-    def getCountersData(self, userId):
-        userInfo = self.mainWindow.vkSession.api.users.get(user_ids=userId, fields='counters')[-1]
-        return userInfo.get('counters')
 
     def showSearchSummary(self, accounts):
         summaryString = "Users found: {}. Closed pages: {}".format(len(accounts), len([account for account in accounts if account.status == 'closed']))
@@ -321,7 +317,7 @@ class ResultsList(QWidget):
 
         self.searchResultsAccounts = []
         self.lastDisplayedAccount = 0
-        self.resultsListLength = 100
+        self.resultsListLength = 10         # TODO Get number of displayed pages from configuration file
 
         self.searchResultsWidgets = []
         self.resultsLayout = QVBoxLayout()
@@ -474,8 +470,6 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.vkSession = VkApiInteraction()
-        
         self.authVkDialog = AuthVkDialog(self)
 
         self.setWindowTitle('Calisto')
@@ -518,15 +512,15 @@ class MainWindow(QMainWindow):
         self.updateStatusBar()
 
     def updateStatusBar(self):
-        if self.vkSession.connectionStatus():
-            welcomeString = "Hello, {} {}".format(self.vkSession.profileInfo['first_name'], self.vkSession.profileInfo['last_name'])
+        if vkSession.connectionStatus():
+            welcomeString = "Hello, {} {}".format(vkSession.profileInfo['first_name'], vkSession.profileInfo['last_name'])
         else:
             welcomeString = "You are not authorized"
 
         self.statusBar.showMessage(welcomeString)
 
     def logOutVk(self):
-        self.vkSession.logOut()
+        vkSession.logOut()
         self.updateStatusBar()
 
         alertMsgBox = QMessageBox()
@@ -536,6 +530,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
 
+    vkSession = VkApiInteraction()
     
     app = QApplication(sys.argv)
 
