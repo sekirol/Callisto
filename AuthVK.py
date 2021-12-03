@@ -1,6 +1,6 @@
 
 import sys
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QThreadPool, Qt
 from PyQt5.QtGui import QPixmap
 
 from PyQt5.QtWidgets import *
@@ -393,9 +393,13 @@ class SearchResultsItem(QWidget):
         self.addNameData()
         self.addAgeData()
         self.addResidenceData()
+        self.addCountersWidget()
         self.textFieldsLayout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
         self.addPhoto()
+
+        # Getting counters values in new thread for each widget
+        self.getExtendedInformation()
 
         self.setLayout(self.mainLayout)
 
@@ -465,6 +469,68 @@ class SearchResultsItem(QWidget):
         imageLabel.setPixmap(imagePixmap)
         self.mainLayout.addWidget(imageLabel)
         self.mainLayout.setAlignment(imageLabel, Qt.AlignRight)
+
+    def addCountersWidget(self):
+        self.countersWidget = VkCountersWidget(self)
+        self.countersWidget.setVisible(False)
+        
+        self.textFieldsLayout.addWidget(self.countersWidget)
+
+    def showCountersData(self):
+        self.countersWidget.updateData(self.accountInfo.counters)
+        self.countersWidget.setVisible(True)
+    
+    # Gets more information for new account widget
+    def getExtendedInformation(self):
+        
+        self.thread = QThread()
+
+        self.apiQuery = VkApiQuery(vkSession, self.accountInfo)
+        self.apiQuery.moveToThread(self.thread)
+
+        # Running thread will start API query
+        self.thread.started.connect(self.apiQuery.run)
+        # When interaction with server finishes, the quit signal will be started
+        self.apiQuery.finished.connect(self.thread.quit)        
+        # Handler object marks himself for delete after end of work
+        self.apiQuery.finished.connect(self.apiQuery.deleteLater)
+        # Thread marks himself for delete after stop of thread
+        self.thread.finished.connect(self.thread.deleteLater)
+        # Display new information
+        self.apiQuery.finished.connect(self.showCountersData)
+
+        self.thread.start()
+
+class VkCountersWidget(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.layout = QGridLayout()
+        self.setLayout(self.layout)
+
+    def updateData(self, counters):
+        counterLabels = [{"friends":"Друзья"}, {"online_friends":"Онлайн"}, {"followers":"Подписчики"}, 
+                         {"subscriptions":"Подписки"}, {"groups":"Группы"}, {"pages":"Интересно"},
+                         {"gifts":"Подарки"}, {"videos":"Видео"}, {"clips":"Клипы"}, {"audios":"Музыка"},
+                         {"photos":"Фотографии"}, {"albums":"Альбомы"}, {"user_photos":"Отмечен"}]
+
+        labelWidgets = []
+        for counter in counterLabels:
+            counterName, counterLabel = list(counter.items())[0]
+            if counters.get(counterName):
+                counterInfoText = "{}: {}".format(counterLabel, counters[counterName])
+                labelWidgets.append(QLabel(counterInfoText))
+        
+        LABELS_IN_ROW = 4
+
+        row = 0
+        col = 0
+        for item in labelWidgets:
+            self.layout.addWidget(item, row, col)
+            col += 1
+            if col >= LABELS_IN_ROW:
+                col = 0
+                row += 1
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):

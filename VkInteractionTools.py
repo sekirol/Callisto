@@ -1,4 +1,5 @@
 
+from PyQt5.QtCore import QObject, QRunnable, QThread, pyqtSignal
 import vk_api, json, os, requests
 
 class VkSearchQuery():
@@ -72,8 +73,8 @@ class VkAccountInfo():
     def setAgeData(self):
         self.bdate = self.accountData.get('bdate')
 
-    def setCountersData(self):
-        self.counters = self.accountData.get('counters')
+    def setCountersData(self, countersDict):
+        self.counters = countersDict
 
     def getAvatar(self):
         imageFolder = 'images'
@@ -161,3 +162,18 @@ class VkApiInteraction():
         
         # If user is not authorized
         return {}
+
+class VkApiQuery(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, vkSession, account):
+        super().__init__()
+        self.session = vkSession
+        self.account = account
+    
+    def run(self):
+        # To get counters from page, you must execute the request to the API for one page
+        accountData = self.session.api.users.get(user_ids=self.account.userId, fields='counters')[0]
+        self.account.setCountersData(accountData['counters'])
+
+        self.finished.emit()
