@@ -7,7 +7,8 @@ from PyQt5.QtWidgets import *
 from datetime import date, datetime
 import calendar
 
-from VkInteractionTools import *
+from VkInteractTools import *
+from ImgInteractGUI import *
 
 class CaptchaDialog(QDialog):
     def __init__(self, parent):
@@ -457,18 +458,9 @@ class SearchResultsItem(QWidget):
             self.textFieldsLayout.addWidget(labelObject)
 
     def addPhoto(self):
-        # Place downloaded image
-        imageSource = "./images/photo_200_{}.jpg".format(self.accountInfo.userId)   
-        if not os.path.exists(imageSource):
-            # Place dummy image
-            imageSource = "./images/photo_200.jpg"
-
-        imagePixmap = QPixmap(imageSource, "JPG")
-        
-        imageLabel = QLabel()
-        imageLabel.setPixmap(imagePixmap)
-        self.mainLayout.addWidget(imageLabel)
-        self.mainLayout.setAlignment(imageLabel, Qt.AlignRight)
+        imagesWidget = VkImagesWidget(self)
+        self.mainLayout.addWidget(imagesWidget)
+        self.mainLayout.setAlignment(imagesWidget, Qt.AlignRight)
 
     def addCountersWidget(self):
         self.countersWidget = VkCountersWidget(self)
@@ -531,6 +523,39 @@ class VkCountersWidget(QWidget):
             if col >= LABELS_IN_ROW:
                 col = 0
                 row += 1
+
+# Widget contains images, like VK account avatar and some images from user page
+class VkImagesWidget(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.layout = QHBoxLayout()
+        self.setLayout(self.layout)
+
+        # Place downloaded image
+        #imageSource = "./images/photo_200_{}.jpg".format(parent.accountInfo.userId)   
+        #if not os.path.exists(imageSource):
+            # Place dummy image
+        
+        # Place three dummy images
+        for i in range(3):
+            image = VkImageLabel(self)
+            self.layout.addWidget(image)
+
+# Clicking on image creates image viewer window
+class VkImageLabel(QLabel):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        # Place dummy image
+        imageSource = "./images/photo_200.jpg"
+
+        imagePixmap = QPixmap(imageSource, "JPG")
+        self.setPixmap(imagePixmap)
+
+    def mousePressEvent(self, mouseEvent):
+        imageViewer = ImageViewerDialog(self)
+        imageViewer.open()
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
